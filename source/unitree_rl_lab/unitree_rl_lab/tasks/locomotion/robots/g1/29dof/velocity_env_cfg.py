@@ -18,7 +18,7 @@ from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR, ISAACLAB_NUCLEUS_DIR
 from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
 
-from unitree_rl_lab.assets.robots.unitree import UNITREE_G1_29DOF_CFG as ROBOT_CFG
+from unitree_rl_lab.assets.robots.unitree import UNITREE_ADAM_LITE_23DOF_CFG as ROBOT_CFG
 from unitree_rl_lab.tasks.locomotion import mdp
 
 COBBLESTONE_ROAD_CFG = terrain_gen.TerrainGeneratorCfg(
@@ -39,7 +39,7 @@ COBBLESTONE_ROAD_CFG = terrain_gen.TerrainGeneratorCfg(
 
 @configclass
 class RobotSceneCfg(InteractiveSceneCfg):
-    """Configuration for the terrain scene with a legged robot."""
+    """Configuration for the terrain scene with PND Adam Lite (23-DoF URDF, wrists fixed)."""
 
     # ground terrain
     terrain = TerrainImporterCfg(
@@ -181,7 +181,7 @@ class ActionsCfg:
     """Action specifications for the MDP."""
 
     JointPositionAction = mdp.JointPositionActionCfg(
-        asset_name="robot", joint_names=[".*"], scale=0.25, use_default_offset=True
+        asset_name="robot", joint_names=[".*"], scale=0.5, use_default_offset=True
     )
 
 
@@ -268,7 +268,6 @@ class RewardsCfg:
                 joint_names=[
                     ".*_shoulder_.*_joint",
                     ".*_elbow_joint",
-                    ".*_wrist_.*",
                 ],
             )
         },
@@ -293,7 +292,7 @@ class RewardsCfg:
 
     # -- robot
     flat_orientation_l2 = RewTerm(func=mdp.flat_orientation_l2, weight=-5.0)
-    base_height = RewTerm(func=mdp.base_height_l2, weight=-10, params={"target_height": 0.78})
+    base_height = RewTerm(func=mdp.base_height_l2, weight=-10, params={"target_height": 0.88})
 
     # -- feet
     gait = RewTerm(
@@ -356,7 +355,7 @@ class CurriculumCfg:
 
 @configclass
 class RobotEnvCfg(ManagerBasedRLEnvCfg):
-    """Configuration for the locomotion velocity-tracking environment."""
+    """Configuration for the locomotion velocity-tracking environment (Adam Lite)."""
 
     # Scene settings
     scene: RobotSceneCfg = RobotSceneCfg(num_envs=4096, env_spacing=2.5)
@@ -400,7 +399,9 @@ class RobotEnvCfg(ManagerBasedRLEnvCfg):
 class RobotPlayEnvCfg(RobotEnvCfg):
     def __post_init__(self):
         super().__post_init__()
-        self.scene.num_envs = 32
+        # Play defaults to few envs to leave VRAM for the Isaac viewport (full 32× humanoid + sensors OOMs on 8GB).
+        # Increase with: python scripts/rsl_rl/play.py --task ... --num_envs 32
+        self.scene.num_envs = 4
         self.scene.terrain.terrain_generator.num_rows = 2
         self.scene.terrain.terrain_generator.num_cols = 10
         self.commands.base_velocity.ranges = self.commands.base_velocity.limit_ranges

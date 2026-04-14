@@ -20,12 +20,15 @@ from unitree_rl_lab.assets.robots import unitree_actuators
 UNITREE_MODEL_DIR = "path/to/unitree_model"  # Replace with the actual path to your unitree_model directory
 UNITREE_ROS_DIR = "path/to/unitree_ros"  # Replace with the actual path to your unitree_ros package
 
+_UNITREE_RL_LAB_ROBOTS_DIR = os.path.dirname(os.path.abspath(__file__))
+_ADAM_LITE_PKG_DIR = os.path.join(_UNITREE_RL_LAB_ROBOTS_DIR, "pnd_adam_lite")
+
 
 @configclass
 class UnitreeArticulationCfg(ArticulationCfg):
     """Configuration for Unitree articulations."""
 
-    joint_sdk_names: list[str] = None
+    joint_sdk_names: list[str] = None  # type: ignore[assignment]
 
     soft_joint_pos_limit_factor = 0.9
 
@@ -79,15 +82,33 @@ class UnitreeUrdfFileCfg(sim_utils.UrdfFileCfg):
         Note: The mesh references inside the URDF should be in the same directory level as the URDF itself.
         """
         tmp_meshes_dir = "/tmp/IsaacLab/unitree_rl_lab/meshes"
-        if os.path.exists(tmp_meshes_dir):
+        if os.path.lexists(tmp_meshes_dir):
             os.remove(tmp_meshes_dir)
         os.makedirs("/tmp/IsaacLab/unitree_rl_lab", exist_ok=True)
         os.symlink(meshes_dir, tmp_meshes_dir)
 
+        # URDF is symlinked as .../unitree_rl_lab/robot.urdf; references like ``../meshes/foo.STL`` resolve to
+        # ``/tmp/IsaacLab/meshes/``, not ``.../unitree_rl_lab/meshes/``. Symlink that path too.
+        tmp_parent_meshes = "/tmp/IsaacLab/meshes"
+        if os.path.lexists(tmp_parent_meshes):
+            os.remove(tmp_parent_meshes)
+        os.makedirs("/tmp/IsaacLab", exist_ok=True)
+        os.symlink(meshes_dir, tmp_parent_meshes)
+
         self.asset_path = "/tmp/IsaacLab/unitree_rl_lab/robot.urdf"
-        if os.path.exists(self.asset_path):
+        if os.path.lexists(self.asset_path):
             os.remove(self.asset_path)
         os.symlink(urdf_path, self.asset_path)
+
+
+def _adam_lite_urdf_spawn() -> UnitreeUrdfFileCfg:
+    """URDF + meshes for PND Adam Lite (23 actuated DoF; wrist yaw joints are fixed in URDF)."""
+    cfg = UnitreeUrdfFileCfg()
+    cfg.replace_asset(
+        meshes_dir=os.path.join(_ADAM_LITE_PKG_DIR, "meshes"),
+        urdf_path=os.path.join(_ADAM_LITE_PKG_DIR, "urdf", "adam_lite.urdf"),
+    )
+    return cfg
 
 
 """ Configuration for the Unitree robots."""
@@ -208,6 +229,62 @@ UNITREE_B2_CFG = UnitreeArticulationCfg(
         ),
     },
     joint_sdk_names=UNITREE_GO2_CFG.joint_sdk_names.copy(),
+)
+
+UNITREE_ADAM_LITE_23DOF_CFG = UnitreeArticulationCfg(
+    spawn=_adam_lite_urdf_spawn(),
+    init_state=ArticulationCfg.InitialStateCfg(
+        pos=(0.0, 0.0, 0.89),
+        joint_pos={
+            ".*_hip_pitch_joint": -0.32,
+            ".*_hip_roll_joint": 0.0,
+            "left_hip_yaw_joint": -0.18,
+            "right_hip_yaw_joint": 0.18,
+            ".*_knee_joint": 0.66,
+            ".*_ankle_pitch_joint": -0.39,
+            ".*_shoulder_pitch_joint": 0.0,
+            ".*_elbow_joint": -0.3,
+            "left_shoulder_roll_joint": 0.1,
+            "right_shoulder_roll_joint": -0.1,
+        },
+        joint_vel={".*": 0.0},
+    ),
+    soft_joint_pos_limit_factor=0.9,
+    actuators={
+        "hip_pitch_knee": unitree_actuators.AdamLiteImplicitActuatorCfg_HipPitchKnee(),
+        "hip_roll": unitree_actuators.AdamLiteImplicitActuatorCfg_HipRoll(),
+        "hip_yaw": unitree_actuators.AdamLiteImplicitActuatorCfg_HipYaw(),
+        "ankle_pitch": unitree_actuators.AdamLiteImplicitActuatorCfg_AnklePitch(),
+        "ankle_roll": unitree_actuators.AdamLiteImplicitActuatorCfg_AnkleRoll(),
+        "waist": unitree_actuators.AdamLiteImplicitActuatorCfg_Waist(),
+        "shoulder": unitree_actuators.AdamLiteImplicitActuatorCfg_Shoulder(),
+        "elbow": unitree_actuators.AdamLiteImplicitActuatorCfg_Elbow(),
+    },
+    joint_sdk_names=[
+        "left_hip_pitch_joint",
+        "left_hip_roll_joint",
+        "left_hip_yaw_joint",
+        "left_knee_joint",
+        "left_ankle_pitch_joint",
+        "left_ankle_roll_joint",
+        "right_hip_pitch_joint",
+        "right_hip_roll_joint",
+        "right_hip_yaw_joint",
+        "right_knee_joint",
+        "right_ankle_pitch_joint",
+        "right_ankle_roll_joint",
+        "waist_roll_joint",
+        "waist_pitch_joint",
+        "waist_yaw_joint",
+        "left_shoulder_pitch_joint",
+        "left_shoulder_roll_joint",
+        "left_shoulder_yaw_joint",
+        "left_elbow_joint",
+        "right_shoulder_pitch_joint",
+        "right_shoulder_roll_joint",
+        "right_shoulder_yaw_joint",
+        "right_elbow_joint",
+    ],
 )
 
 UNITREE_H1_CFG = UnitreeArticulationCfg(

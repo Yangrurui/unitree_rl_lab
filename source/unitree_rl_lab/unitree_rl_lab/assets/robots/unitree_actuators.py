@@ -3,7 +3,7 @@ from __future__ import annotations
 import torch
 from dataclasses import MISSING
 
-from isaaclab.actuators import DelayedPDActuator, DelayedPDActuatorCfg
+from isaaclab.actuators import DelayedPDActuator, DelayedPDActuatorCfg, ImplicitActuatorCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.types import ArticulationActions
 
@@ -233,3 +233,82 @@ class UnitreeActuatorCfg_W4010_25(UnitreeActuatorCfg):
     | gear_2 |                | ratio | 5
     """
     armature = 0.00425
+
+
+# --- Adam Lite (PND) / Adam SP MJCF defaults (armature from ``adam_sp_23_dof.xml``) ---
+# PD gains follow ``InstinctMJ/src/instinct_mj/assets/adam_sp.py`` motor specs.
+# No extra actuator torque/speed limits here (URDF / physics limits apply).
+
+
+@configclass
+class AdamLiteImplicitActuatorCfg_HipPitchKnee(ImplicitActuatorCfg):
+    """Hip pitch + knee (MJCF ``hip_pitch`` / ``knee`` armature)."""
+
+    joint_names_expr = [".*_hip_pitch_joint", ".*_knee_joint"]
+    stiffness = 300.0
+    damping = 7.0
+    friction = 0.01
+    armature = 0.13426
+
+
+@configclass
+class AdamLiteImplicitActuatorCfg_HipRoll(ImplicitActuatorCfg):
+    joint_names_expr = [".*_hip_roll_joint"]
+    stiffness = 600.0
+    damping = 10.0
+    friction = 0.01
+    armature = 0.281573
+
+
+@configclass
+class AdamLiteImplicitActuatorCfg_HipYaw(ImplicitActuatorCfg):
+    joint_names_expr = [".*_hip_yaw_joint"]
+    stiffness = 300.0
+    damping = 2.0
+    friction = 0.01
+    armature = 0.23409
+
+
+@configclass
+class AdamLiteImplicitActuatorCfg_AnklePitch(ImplicitActuatorCfg):
+    joint_names_expr = [".*_ankle_pitch_joint"]
+    stiffness = 130.0
+    damping = 3.5
+    friction = 0.01
+    armature = 0.0549
+
+
+@configclass
+class AdamLiteImplicitActuatorCfg_AnkleRoll(ImplicitActuatorCfg):
+    joint_names_expr = [".*_ankle_roll_joint"]
+    stiffness = 70.0
+    damping = 2.0
+    friction = 0.01
+    armature = 0.0549
+
+
+@configclass
+class AdamLiteImplicitActuatorCfg_Waist(ImplicitActuatorCfg):
+    joint_names_expr = ["waist_roll_joint", "waist_pitch_joint", "waist_yaw_joint"]
+    stiffness = 400.0
+    damping = 11.0
+    friction = 0.01
+    armature = 0.23409
+
+
+@configclass
+class AdamLiteImplicitActuatorCfg_Shoulder(ImplicitActuatorCfg):
+    joint_names_expr = [".*_shoulder_pitch_joint", ".*_shoulder_roll_joint", ".*_shoulder_yaw_joint"]
+    stiffness = 60.0
+    damping = 3.0
+    friction = 0.01
+    armature = 0.01
+
+
+@configclass
+class AdamLiteImplicitActuatorCfg_Elbow(ImplicitActuatorCfg):
+    joint_names_expr = [".*_elbow_joint"]
+    stiffness = 60.0
+    damping = 3.0
+    friction = 0.01
+    armature = 0.01
