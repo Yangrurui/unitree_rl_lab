@@ -63,7 +63,10 @@ try:
 except ImportError:  # Isaac Lab < 2.2 / older layout
     from isaaclab.utils.pretrained_checkpoint import get_published_pretrained_checkpoint  # type: ignore[no-redef]
 from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlVecEnvWrapper, export_policy_as_jit, export_policy_as_onnx
-from isaaclab_rl.rsl_rl.utils import handle_deprecated_rsl_rl_cfg
+try:
+    from isaaclab_rl.rsl_rl.utils import handle_deprecated_rsl_rl_cfg
+except ImportError:
+    handle_deprecated_rsl_rl_cfg = None
 from isaaclab_tasks.utils import get_checkpoint_path
 
 import unitree_rl_lab.tasks  # noqa: F401
@@ -83,7 +86,8 @@ def main():
         entry_point_key="play_env_cfg_entry_point",
     )
     agent_cfg: RslRlOnPolicyRunnerCfg = cli_args.parse_rsl_rl_cfg(args_cli.task, args_cli)
-    agent_cfg = handle_deprecated_rsl_rl_cfg(agent_cfg, version("rsl-rl-lib"))
+    if handle_deprecated_rsl_rl_cfg is not None:
+        agent_cfg = handle_deprecated_rsl_rl_cfg(agent_cfg, version("rsl-rl-lib"))
 
     # specify directory for logging experiments
     log_root_path = os.path.join("logs", "rsl_rl", agent_cfg.experiment_name)

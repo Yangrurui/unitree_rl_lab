@@ -105,7 +105,11 @@ from isaaclab.envs import (
 from isaaclab.utils.dict import print_dict
 from isaaclab.utils.io import dump_yaml
 from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlVecEnvWrapper
-from isaaclab_rl.rsl_rl.utils import handle_deprecated_rsl_rl_cfg
+
+try:
+    from isaaclab_rl.rsl_rl.utils import handle_deprecated_rsl_rl_cfg
+except ImportError:
+    handle_deprecated_rsl_rl_cfg = None
 from isaaclab_tasks.utils import get_checkpoint_path
 from isaaclab_tasks.utils.hydra import hydra_task_config
 
@@ -129,7 +133,8 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     )
 
     # rsl-rl >= 4.0: migrate legacy ``policy`` (RslRlPpoActorCriticCfg) to ``actor`` / ``critic`` with class_name
-    agent_cfg = handle_deprecated_rsl_rl_cfg(agent_cfg, installed_version)
+    if handle_deprecated_rsl_rl_cfg is not None:
+        agent_cfg = handle_deprecated_rsl_rl_cfg(agent_cfg, installed_version)
 
     # set the environment seed
     # note: certain randomizations occur in the environment initialization so we set the seed here

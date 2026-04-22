@@ -19,3 +19,10 @@ gym.register(
     disable_env_checker=True,
     kwargs=_ADAM_LITE_VELOCITY_KWARGS,
 )
+# Alias: ``UNITREE_ADAM_LITE_23DOF_CFG`` is the robot articulation cfg in code, not a gym id; users sometimes pass it as --task.
+gym.register(
+    id="UNITREE_ADAM_LITE_23DOF_CFG",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs=_ADAM_LITE_VELOCITY_KWARGS,
+)

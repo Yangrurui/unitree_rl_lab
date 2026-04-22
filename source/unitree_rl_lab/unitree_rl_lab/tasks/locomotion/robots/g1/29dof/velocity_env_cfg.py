@@ -261,7 +261,7 @@ class RewardsCfg:
 
     joint_deviation_arms = RewTerm(
         func=mdp.joint_deviation_l1,
-        weight=-0.1,
+        weight=-0.7,
         params={
             "asset_cfg": SceneEntityCfg(
                 "robot",
@@ -272,9 +272,23 @@ class RewardsCfg:
             )
         },
     )
+
+    # joint_deviation_arm_roll = RewTerm(
+    #     func=mdp.joint_deviation_l1,
+    #     weight=-0.5,
+    #     params={
+    #         "asset_cfg": SceneEntityCfg(
+    #             "robot",
+    #             joint_names=[
+    #                 ".*_shoulder_roll.*_joint",
+    #             ],
+    #         )
+    #     },
+    # )
+
     joint_deviation_waists = RewTerm(
         func=mdp.joint_deviation_l1,
-        weight=-1,
+        weight=-2,
         params={
             "asset_cfg": SceneEntityCfg(
                 "robot",
@@ -286,29 +300,29 @@ class RewardsCfg:
     )
     joint_deviation_legs = RewTerm(
         func=mdp.joint_deviation_l1,
-        weight=-1.0,
+        weight=-1.2,
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_hip_roll_joint", ".*_hip_yaw_joint"])},
     )
 
     # -- robot
-    flat_orientation_l2 = RewTerm(func=mdp.flat_orientation_l2, weight=-5.0)
+    flat_orientation_l2 = RewTerm(func=mdp.flat_orientation_l2, weight=-2.5)
     base_height = RewTerm(func=mdp.base_height_l2, weight=-10, params={"target_height": 0.88})
 
     # -- feet
     gait = RewTerm(
         func=mdp.feet_gait,
-        weight=0.5,
+        weight=1.2,
         params={
             "period": 0.8,
             "offset": [0.0, 0.5],
-            "threshold": 0.55,
+            "threshold": 0.5,
             "command_name": "base_velocity",
             "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*ankle_roll.*"),
         },
     )
     feet_slide = RewTerm(
         func=mdp.feet_slide,
-        weight=-0.2,
+        weight=-0.5,
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names=".*ankle_roll.*"),
             "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*ankle_roll.*"),
@@ -320,7 +334,7 @@ class RewardsCfg:
         params={
             "std": 0.05,
             "tanh_mult": 2.0,
-            "target_height": 0.1,
+            "target_height": 0.11,
             "asset_cfg": SceneEntityCfg("robot", body_names=".*ankle_roll.*"),
         },
     )
@@ -404,4 +418,8 @@ class RobotPlayEnvCfg(RobotEnvCfg):
         self.scene.num_envs = 4
         self.scene.terrain.terrain_generator.num_rows = 2
         self.scene.terrain.terrain_generator.num_cols = 10
-        self.commands.base_velocity.ranges = self.commands.base_velocity.limit_ranges
+        self.commands.base_velocity.ranges = mdp.UniformLevelVelocityCommandCfg.Ranges(
+            lin_vel_x=(0.5, 0.5),
+            lin_vel_y=(0.0, 0.0),
+            ang_vel_z=(0.0, 0.0),
+        )
