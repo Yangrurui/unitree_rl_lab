@@ -171,7 +171,7 @@ class CommandsCfg:
             lin_vel_x=(-0.1, 0.1), lin_vel_y=(-0.1, 0.1), ang_vel_z=(-0.1, 0.1)
         ),
         limit_ranges=mdp.UniformLevelVelocityCommandCfg.Ranges(
-            lin_vel_x=(-0.5, 1.0), lin_vel_y=(-0.3, 0.3), ang_vel_z=(-0.2, 0.2)
+            lin_vel_x=(-0.5, 1.2), lin_vel_y=(-0.5, 0.5), ang_vel_z=(-0.4, 0.4)
         ),
     )
 
@@ -181,7 +181,7 @@ class ActionsCfg:
     """Action specifications for the MDP."""
 
     JointPositionAction = mdp.JointPositionActionCfg(
-        asset_name="robot", joint_names=[".*"], scale=0.5, use_default_offset=True
+        asset_name="robot", joint_names=[".*"], scale=0.25, use_default_offset=True
     )
 
 
@@ -245,7 +245,7 @@ class RewardsCfg:
         params={"command_name": "base_velocity", "std": math.sqrt(0.25)},
     )
     track_ang_vel_z = RewTerm(
-        func=mdp.track_ang_vel_z_exp, weight=0.5, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
+        func=mdp.track_ang_vel_z_exp, weight=0.8, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
     )
 
     alive = RewTerm(func=mdp.is_alive, weight=0.15)
@@ -257,11 +257,11 @@ class RewardsCfg:
     joint_acc = RewTerm(func=mdp.joint_acc_l2, weight=-2.5e-7)
     action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.05)
     dof_pos_limits = RewTerm(func=mdp.joint_pos_limits, weight=-5.0)
-    energy = RewTerm(func=mdp.energy, weight=-2e-5)
+    energy = RewTerm(func=mdp.energy, weight=-1e-5)
 
     joint_deviation_arms = RewTerm(
         func=mdp.joint_deviation_l1,
-        weight=-0.7,
+        weight=-0.8,
         params={
             "asset_cfg": SceneEntityCfg(
                 "robot",
@@ -275,7 +275,7 @@ class RewardsCfg:
 
     # joint_deviation_arm_roll = RewTerm(
     #     func=mdp.joint_deviation_l1,
-    #     weight=-0.5,
+    #     weight=-0.8,
     #     params={
     #         "asset_cfg": SceneEntityCfg(
     #             "robot",
@@ -288,7 +288,7 @@ class RewardsCfg:
 
     joint_deviation_waists = RewTerm(
         func=mdp.joint_deviation_l1,
-        weight=-2,
+        weight=-2.0,
         params={
             "asset_cfg": SceneEntityCfg(
                 "robot",
@@ -306,12 +306,12 @@ class RewardsCfg:
 
     # -- robot
     flat_orientation_l2 = RewTerm(func=mdp.flat_orientation_l2, weight=-2.5)
-    base_height = RewTerm(func=mdp.base_height_l2, weight=-10, params={"target_height": 0.88})
+    base_height = RewTerm(func=mdp.base_height_l2, weight=-10, params={"target_height": 0.89})
 
     # -- feet
     gait = RewTerm(
         func=mdp.feet_gait,
-        weight=1.2,
+        weight=0.8,
         params={
             "period": 0.8,
             "offset": [0.0, 0.5],
@@ -330,11 +330,11 @@ class RewardsCfg:
     )
     feet_clearance = RewTerm(
         func=mdp.foot_clearance_reward,
-        weight=1.0,
+        weight=0.8,
         params={
             "std": 0.05,
             "tanh_mult": 2.0,
-            "target_height": 0.11,
+            "target_height": 0.1,
             "asset_cfg": SceneEntityCfg("robot", body_names=".*ankle_roll.*"),
         },
     )
@@ -419,7 +419,7 @@ class RobotPlayEnvCfg(RobotEnvCfg):
         self.scene.terrain.terrain_generator.num_rows = 2
         self.scene.terrain.terrain_generator.num_cols = 10
         self.commands.base_velocity.ranges = mdp.UniformLevelVelocityCommandCfg.Ranges(
-            lin_vel_x=(0.5, 0.5),
+            lin_vel_x=(0.8, 0.8),
             lin_vel_y=(0.0, 0.0),
             ang_vel_z=(0.0, 0.0),
         )
